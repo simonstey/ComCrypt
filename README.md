@@ -1,7 +1,6 @@
-# HDT-Crypt
-Keep it ComCrypt: Efficient Compression and Encryption of RDF Datasets
+# HDT-Crypt: Efficient Compression and Encryption of RDF Datasets
 
-# Introduction
+## Introduction
 
 The publication and interchange of RDF datasets online has experienced significant growth in recent years, promoted by different but complementary efforts, such as Linked Open Data, the Web of Things and RDF stream processing systems.
 
@@ -9,7 +8,7 @@ However, the Web of Data is still not mature enough to support the next generati
 
 We present a framework which combines encryption with HDT compression techniques for RDF datasets. Particularly, we demonstrate how careful integration allows compressed and encrypted datasets, for multiple users with different access policies, to be efficiently published, exchanged and consumed using the existing web infrastructure.
 
-# Source Code
+## Source Code
 
 We provide a first alpha version of HDT-Crypt source code. While this build has been extensively tested, the current alpha state is still subject to bugs and optimizations.
 
