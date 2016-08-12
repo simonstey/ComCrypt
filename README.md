@@ -14,5 +14,5 @@ We provide a first alpha version of HDT-Crypt source code. While this build has 
 
 HDT-Crypt content is licensed by Lesser General Public License.
 
-Please find the [LUBM and DBPEDIA triple pattern queries](../src/main/resources/queries) of our evaluation, and the [LUBM and DBPEDIA RDF graphs (in HDT format)](ftp://nassdataweb.infor.uva.es/ComCrypt/).
+Please find the [LUBM and DBPEDIA triple pattern queries](../master/src/main/resources/queries) of our evaluation, and the [LUBM and DBPEDIA RDF graphs](http://bit.ly/2aNVT3p) (in HDT format).
 
