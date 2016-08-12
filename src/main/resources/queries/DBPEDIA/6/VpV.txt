@@ -1,0 +1,6 @@
+? http://dbpedia.org/ontology/foundingYear ?
+? http://dbpedia.org/ontology/wikiPageWikiLink ?
+? http://dbpedia.org/property/fivefor ?
+? http://dbpedia.org/property/homeabr ?
+? http://dbpedia.org/property/reference ?
+? http://dbpedia.org/property/worldChamp2First ?
