@@ -11,14 +11,23 @@ import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.CipherParameters;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import it.unisa.dia.gas.crypto.jpbc.fe.hve.ip08.engines.HVEIP08KEMEngine;
+import it.unisa.dia.gas.crypto.kem.KeyEncapsulationMechanism;
 import wu.wien.ac.at.encryption.DecryptFileVisitor;
+import wu.wien.ac.at.encryption.DecryptFileVisitorHVE;
 import wu.wien.ac.at.encryption.EncryptFileVisitor;
+import wu.wien.ac.at.encryption.EncryptFileVisitorHVE;
+import wu.wien.ac.at.encryption.EncryptionUtil;
 
 /**
  * @author Simon Steyskal
@@ -31,28 +40,38 @@ public class ComCryption {
 	private static String compressionApproach;
 	private static String username;
 	private static String[] partitions;
+	private static String[] keyPartitions;
 	private static String method;
 	private static int numberOfRuns;
+	private static int numberOfPartitions;
 
 	/**
 	 * @param args
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-
+		Security.addProvider(new BouncyCastleProvider());
+		
 		inputPath = System.getProperty("inPath");
 		outputPath = System.getProperty("outPath");
 		keystorePath = System.getProperty("keyPath");
-		numberOfRuns = Integer.valueOf(System.getProperty("runs"));
+		numberOfPartitions = Integer.valueOf(System.getProperty("nrPartitions"));
 		method = System.getProperty("method");
-	
+		compressionApproach = System.getProperty("approach");
+		
 		if (method.equals("decrypt")) {
-			compressionApproach = System.getProperty("approach");
 			username = System.getProperty("user");
 			partitions = System.getProperty("partitions").split(" ");
 			averageTest(() -> decryptFiles());
-		} else {
+		} else if (method.equals("encrypt")) {
 			averageTest(() -> encryptFiles());
+		} else if (method.equals("encryptHVE")) {
+			averageTest(() -> encryptFilesHVE());
+		} else if (method.equals("decryptHVE")) {
+			username = System.getProperty("user");
+			partitions = System.getProperty("partitions").split(" ");
+			keyPartitions = System.getProperty("keyPartitions").split(" ");
+			averageTest(() -> decryptFilesHVE());
 		}
 
 	}
@@ -70,8 +89,75 @@ public class ComCryption {
 	public static void averageTest() {
 		if (method.equals("decrypt")) {
 			averageTest(numberOfRuns, () -> decryptFiles());
-		} else {
+		} else if (method.equals("encrypt")) {
 			averageTest(numberOfRuns, () -> encryptFiles());
+		} else if (method.equals("encryptHVE")) {
+			averageTest(numberOfRuns, () -> encryptFilesHVE());
+		} else if (method.equals("decryptHVE")) {
+			averageTest(numberOfRuns, () -> decryptFilesHVE());
+		}
+	}
+	
+	/**
+	 * 
+	 */
+	public static void encryptFilesHVE() {
+		System.out.println("Starting to encrypt all files in: " + inputPath);
+		System.out.println("Encrypted files will be stored in: " + outputPath);
+
+		 int n = numberOfPartitions;
+		    AsymmetricCipherKeyPair keyPair;
+			try {
+				keyPair = EncryptionUtil.setup(EncryptionUtil.genBinaryParam(n,keystorePath), keystorePath);
+	
+
+		    EncryptFileVisitorHVE visitor = new EncryptFileVisitorHVE(Paths.get(inputPath).normalize().toAbsolutePath(),
+					Paths.get(outputPath).normalize().toAbsolutePath(), keyPair.getPublic(), n, compressionApproach);
+
+		
+				Files.walkFileTree(Paths.get(inputPath).normalize().toAbsolutePath(), visitor);
+				System.out.format("Number of processed files: %d.\n", visitor.getFiles());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+//			keyStore.store(new FileOutputStream(keystorePath), "master".toCharArray());
+
+	}
+
+	/**
+	 * 
+	 */
+	public static void decryptFilesHVE() {
+		System.out.println("Starting to decrypt files for partitions: " + Arrays.asList(partitions));
+		System.out.println("Decrypted files will be stored in: " + outputPath);
+
+	
+			int n = numberOfPartitions;
+		    AsymmetricCipherKeyPair keyPair;
+				try {
+					keyPair = EncryptionUtil.setupLoad(EncryptionUtil.loadBinaryParam(n,keystorePath), keystorePath);
+		
+			KeyEncapsulationMechanism kem = new HVEIP08KEMEngine();
+            
+            CipherParameters cpm = EncryptionUtil.keyGen(keyPair.getPrivate(), EncryptionUtil.createKeyVector(n,keyPartitions));
+            
+            kem.init(false, cpm);
+	
+			Path normalizedInPath = Paths.get(inputPath).normalize().toAbsolutePath();
+			Path normalizedOutPath = Paths.get(outputPath).normalize().toAbsolutePath();
+
+			DecryptFileVisitorHVE visitor = new DecryptFileVisitorHVE(normalizedInPath, normalizedOutPath,
+					kem, compressionApproach, partitions, username);
+			Files.walkFileTree(Paths.get(inputPath).normalize().toAbsolutePath(), visitor);
+			
+			System.out.println("----------------------");
+			System.out.format("Number of processed files: %d.\n", visitor.getFiles());
+			System.out.println("----------------------");
+		} catch (IOException  e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 

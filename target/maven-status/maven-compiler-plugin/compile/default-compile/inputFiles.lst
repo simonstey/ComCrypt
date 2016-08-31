@@ -1,5 +1,12 @@
 C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\EncryptFileVisitor.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\EncryptFileVisitorHVE.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\PairingStreamWriter.java
 C:\workspace\comenc\src\main\java\wu\wien\ac\at\main\ComCryption.java
 C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\EncryptionUtil.java
 C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\DecryptFileVisitor.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\DecryptFileVisitorHVE.java
 C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\User.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\PairingStreamReader.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\HVEKeyPairGenerator.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\HVESecretKeyGenerator.java
+C:\workspace\comenc\src\main\java\wu\wien\ac\at\encryption\PoolExec.java

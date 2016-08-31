@@ -1,6 +1,0 @@
-? http://example.org#doctoralDegreeFrom ?
-? http://example.org#mastersDegreeFrom ?
-? http://example.org#name ?
-? http://example.org#subOrganizationOf ?
-? http://example.org#undergraduateDegreeFrom ?
-? http://www.w3.org/1999/02/22-rdf-syntax-ns#type ?
