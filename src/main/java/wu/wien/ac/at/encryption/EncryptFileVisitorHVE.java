@@ -4,6 +4,7 @@
 package wu.wien.ac.at.encryption;
 
 import static java.nio.file.StandardCopyOption.COPY_ATTRIBUTES;
+import infobiz.wu.ac.at.comcrypt.crypto.cpabe.Cpabe;
 
 import java.io.IOException;
 import java.nio.file.CopyOption;
@@ -21,6 +22,7 @@ import java.security.NoSuchProviderException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 import org.apache.commons.io.FilenameUtils;
 import org.bouncycastle.crypto.CipherParameters;
 
@@ -37,18 +39,20 @@ public class EncryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 	private int n;
 	private final Path source;
 	private final Path target;
-	private final CipherParameters pubKey;
+	private final String keyPath;
+	private Cpabe cp;
 	private final String compressionApproach;
 	/**
 	 * @param source
 	 * @param target
 	 */
-	public EncryptFileVisitorHVE(Path source, Path target, CipherParameters pubKey, int n, String compressionApproach) {
+	public EncryptFileVisitorHVE(Path source, Path target, String keyPath, int n, String compressionApproach) {
 		this.source = source;
 		this.target = target;
-		this.pubKey = pubKey;
+		this.keyPath = keyPath;
 		this.n = n;
 		this.compressionApproach = compressionApproach;
+		this.cp = new Cpabe();
 	}
 
 
@@ -80,17 +84,20 @@ public class EncryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 		String filename = file.getFileName().toString();
 		String extension =  FilenameUtils.getExtension(filename);
 		String eFilename = FilenameUtils.getBaseName(filename) + ".e" + extension;
-
-		
-
-		
+		String policy = EncryptionUtil.composePolicy(FilenameUtils.getBaseName(filename),extension,compressionApproach);
+	
 		    try {
-		    	EncryptionUtil.encryptFile(file.toFile(), newFile.resolveSibling(eFilename).toFile(), pubKey, n, compressionApproach);
+		    	cp.enc(keyPath,policy,file.toString(), newFile.resolveSibling(eFilename).toString());
+		    	
+//		    	EncryptionUtil.encryptFile(file.toFile(), newFile.resolveSibling(eFilename).toFile(), keyPath, n, compressionApproach);
 			} catch (InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException
 					| NoSuchPaddingException | NoSuchProviderException | IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (InvalidAlgorithmParameterException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

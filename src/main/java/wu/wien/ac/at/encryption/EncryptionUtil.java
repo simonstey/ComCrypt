@@ -51,6 +51,7 @@ import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 
+import infobiz.wu.ac.at.comcrypt.crypto.cpabe.Cpabe;
 import it.unisa.dia.gas.crypto.jpbc.fe.hve.ip08.engines.HVEIP08KEMEngine;
 import it.unisa.dia.gas.crypto.jpbc.fe.hve.ip08.generators.HVEIP08ParametersGenerator;
 import it.unisa.dia.gas.crypto.jpbc.fe.hve.ip08.params.HVEIP08EncryptionParameters;
@@ -248,6 +249,43 @@ public class EncryptionUtil {
 		return result;
    }
     
+    public static String composePolicy(String fileName, String extension, String compressionApproach) {
+    	String filename = "";
+    	StringBuilder policy = new StringBuilder();
+    	
+    	switch (compressionApproach) {
+		case "A":
+			filename = Math.pow(2, (Double.parseDouble(fileName)-1))+"";
+			filename = filename.split("\\.")[0];
+			break;
+		case "C":
+			if (extension.equals("bt")){
+				filename = Math.pow(2, (Double.parseDouble(fileName)-1))+"";
+				filename = filename.split("\\.")[0];
+			} else {
+				filename = fileName;
+			}
+			break;
+		default :
+			filename = fileName;
+			break;
+		}
+    	
+		long filenameL = Long.parseLong(filename, 10);
+		
+		BitSet bs2 = BitSet.valueOf(new long[] { filenameL });
+
+		for(int i = 0; i < bs2.size(); i++){
+			if(bs2.get(i))
+				policy.append("D:"+(i+1)+" ");
+		}
+		
+		if(bs2.cardinality() > 1){
+			policy.append("1of"+bs2.cardinality());
+		}
+		return policy.toString();
+   }
+    
     public static int[] createKeyVector(int n, String[] partitions) {
     	int[] result = new int[n];
     	Arrays.fill(result,0);
@@ -339,7 +377,7 @@ public class EncryptionUtil {
 	 * @throws NoSuchProviderException 
 	 * @throws InvalidAlgorithmParameterException 
 	 */
-	public static void encryptFile(File input, File output, CipherParameters pubKey, int n, String compressionApproach)//int... attributes)
+	public static void encryptFile(File input, File output, String keyPath, int n, String compressionApproach)//int... attributes)
 			throws IOException, IllegalBlockSizeException, BadPaddingException, InvalidKeyException,
 			NoSuchAlgorithmException, NoSuchPaddingException, NoSuchProviderException, InvalidAlgorithmParameterException {
 		FileInputStream fin;
@@ -370,10 +408,16 @@ public class EncryptionUtil {
 			filename = FilenameUtils.getBaseName(input.getName());
 			break;
 		}
-		
+
 		
 		/* ipBuf = AESSeed(=M) + [c1 + c2] */
-		byte[][] ipBuf = encaps(pubKey,createFileVector(n,filename));
+		byte[][] ipBuf = null;
+		try {
+//			ipBuf = encC.encaps(keyPath,filename);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		byte[] raw = getRawKey(ipBuf[0]);
 		SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");

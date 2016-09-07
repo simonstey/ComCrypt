@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -16,11 +15,13 @@ import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
 import org.bouncycastle.crypto.CipherParameters;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import infobiz.wu.ac.at.comcrypt.crypto.cpabe.Cpabe;
 import it.unisa.dia.gas.crypto.jpbc.fe.hve.ip08.engines.HVEIP08KEMEngine;
 import it.unisa.dia.gas.crypto.kem.KeyEncapsulationMechanism;
 import wu.wien.ac.at.encryption.DecryptFileVisitor;
@@ -41,6 +42,7 @@ public class ComCryption {
 	private static String username;
 	private static String[] partitions;
 	private static String[] keyPartitions;
+	private static String keyPartitionsHVE;
 	private static String method;
 	private static int numberOfRuns;
 	private static int numberOfPartitions;
@@ -70,7 +72,7 @@ public class ComCryption {
 		} else if (method.equals("decryptHVE")) {
 			username = System.getProperty("user");
 			partitions = System.getProperty("partitions").split(" ");
-			keyPartitions = System.getProperty("keyPartitions").split(" ");
+			keyPartitionsHVE = System.getProperty("keyPartitions");
 			averageTest(() -> decryptFilesHVE());
 		}
 
@@ -110,9 +112,12 @@ public class ComCryption {
 			try {
 				keyPair = EncryptionUtil.setup(EncryptionUtil.genBinaryParam(n,keystorePath), keystorePath);
 	
+				Cpabe test = new Cpabe();
+				test.setup(keystorePath);
+
 
 		    EncryptFileVisitorHVE visitor = new EncryptFileVisitorHVE(Paths.get(inputPath).normalize().toAbsolutePath(),
-					Paths.get(outputPath).normalize().toAbsolutePath(), keyPair.getPublic(), n, compressionApproach);
+					Paths.get(outputPath).normalize().toAbsolutePath(), keystorePath, n, compressionApproach);
 
 		
 				Files.walkFileTree(Paths.get(inputPath).normalize().toAbsolutePath(), visitor);
@@ -132,30 +137,34 @@ public class ComCryption {
 	public static void decryptFilesHVE() {
 		System.out.println("Starting to decrypt files for partitions: " + Arrays.asList(partitions));
 		System.out.println("Decrypted files will be stored in: " + outputPath);
+		try{
+		Cpabe test = new Cpabe();
+		test.keygen(keystorePath, keystorePath, keyPartitionsHVE);
 
-	
-			int n = numberOfPartitions;
-		    AsymmetricCipherKeyPair keyPair;
-				try {
-					keyPair = EncryptionUtil.setupLoad(EncryptionUtil.loadBinaryParam(n,keystorePath), keystorePath);
-		
-			KeyEncapsulationMechanism kem = new HVEIP08KEMEngine();
-            
-            CipherParameters cpm = EncryptionUtil.keyGen(keyPair.getPrivate(), EncryptionUtil.createKeyVector(n,keyPartitions));
-            
-            kem.init(false, cpm);
+//		test.dec(keystorePath, prvfile, encfile, decfile);
+//	
+//			int n = numberOfPartitions;
+//		    AsymmetricCipherKeyPair keyPair;
+//				try {
+//					keyPair = EncryptionUtil.setupLoad(EncryptionUtil.loadBinaryParam(n,keystorePath), keystorePath);
+//		
+//			KeyEncapsulationMechanism kem = new HVEIP08KEMEngine();
+//            
+//            CipherParameters cpm = EncryptionUtil.keyGen(keyPair.getPrivate(), EncryptionUtil.createKeyVector(n,keyPartitions));
+//            
+//            kem.init(false, cpm);
 	
 			Path normalizedInPath = Paths.get(inputPath).normalize().toAbsolutePath();
 			Path normalizedOutPath = Paths.get(outputPath).normalize().toAbsolutePath();
 
 			DecryptFileVisitorHVE visitor = new DecryptFileVisitorHVE(normalizedInPath, normalizedOutPath,
-					kem, compressionApproach, partitions, username);
+					keystorePath, compressionApproach, partitions, username);
 			Files.walkFileTree(Paths.get(inputPath).normalize().toAbsolutePath(), visitor);
 			
 			System.out.println("----------------------");
 			System.out.format("Number of processed files: %d.\n", visitor.getFiles());
 			System.out.println("----------------------");
-		} catch (IOException  e) {
+		} catch (IOException | NoSuchAlgorithmException  e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

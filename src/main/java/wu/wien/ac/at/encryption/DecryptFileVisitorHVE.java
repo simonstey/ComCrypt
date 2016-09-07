@@ -22,9 +22,11 @@ import java.util.BitSet;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
 import org.apache.commons.io.FilenameUtils;
 import org.bouncycastle.crypto.InvalidCipherTextException;
 
+import infobiz.wu.ac.at.comcrypt.crypto.cpabe.Cpabe;
 import it.unisa.dia.gas.crypto.kem.KeyEncapsulationMechanism;
 
 /**
@@ -40,12 +42,14 @@ public class DecryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 	private final Path source;
 	private final Path target;
 	private String compressionApproach;
+	private String keyPath;
 	private KeyEncapsulationMechanism kem;
 	private String[] partitions;
 	private static final String A = "A";
 	private static final String B = "B";
 	private static final String C = "C";
 	private static final String D = "D";
+	private Cpabe cp;
 	private User decryptingUser = new User();
 
 	/**
@@ -56,14 +60,15 @@ public class DecryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 	 * @param compressionApproach
 	 * @param partitions
 	 */
-	public DecryptFileVisitorHVE(Path source, Path target, KeyEncapsulationMechanism kem,
+	public DecryptFileVisitorHVE(Path source, Path target, String keyPath,
 			String compressionApproach, String[] partitions, String username) {
 		this.source = source;
-		this.kem = kem;
+		this.keyPath = keyPath;
 		this.target = target;
 		this.compressionApproach = compressionApproach;
 		this.partitions = partitions;
 		decryptingUser.setPassphrase(username);
+		this.cp = new Cpabe();
 	}
 
 	/**
@@ -174,7 +179,9 @@ public class DecryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 		try {
 			String eFilename = filename.replace(".e", ".");
 
-			EncryptionUtil.decryptFile(file.toFile(), newFile.resolveSibling(eFilename).toFile(), kem);
+			cp.dec(keyPath, keyPath, file.toString(), newFile.resolveSibling(eFilename).toString());
+		
+//			EncryptionUtil.decryptFile(file.toFile(), newFile.resolveSibling(eFilename).toFile(), kem);
 		}	catch (BadPaddingException e) {
 				System.out.println("Not allowed to decrypt "+filename+"!");
 		} 	catch (IOException e) {
@@ -189,6 +196,9 @@ public class DecryptFileVisitorHVE extends SimpleFileVisitor<Path> {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidAlgorithmParameterException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
